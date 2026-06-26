@@ -1,4 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Excel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using OfficeOpenXml;
+using OfficeOpenXml.Core.ExcelPackage;
+using System.ComponentModel;
+using System.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 [ApiController]
@@ -6,14 +13,27 @@
 public class UploadExcelController : ControllerBase
 {
     [HttpPost("upload")]
-    public async Task<IActionResult> UploadExcel(IFormFile file)
+    public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
+        List<Employee> employees = new List<Employee>();
+
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded");
 
-        var path = @"C:\Users\onyeo\Documents\Book1.xlsx";
+        // Folder location
+        var folderPath = @"C:\Users\onyeo\Desktop\Excel\wwwroot\upload";
 
-        using var stream = new FileStream(path, FileMode.Create);
+        // Create folder if missing
+        if (!Directory.Exists(folderPath))
+        {
+            Directory.CreateDirectory(folderPath);
+        }
+
+        // Full file path
+        var filePath = Path.Combine(folderPath, file.FileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+
         await file.CopyToAsync(stream);
 
         return Ok("Upload successful");
@@ -61,3 +81,7 @@ public class UploadExcelController : ControllerBase
         }
     }
 }
+
+    
+
+
