@@ -2,10 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
-using OfficeOpenXml.Core.ExcelPackage;
 using System.ComponentModel;
-using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 [ApiController]
@@ -36,10 +33,7 @@ public class UploadExcelController : ControllerBase
 
         await file.CopyToAsync(stream);
 
-        return Ok("Upload successful");
-
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
+        ExcelPackage.License.SetNonCommercialPersonal("Nonso");
         using (var package = new ExcelPackage(new FileInfo(filePath)))
         {
             var worksheet = package.Workbook.Worksheets[0];
@@ -51,10 +45,11 @@ public class UploadExcelController : ControllerBase
             {
                 employees.Add(new Employee
                 {
-                    Username = worksheet.Cells[row, 1].Text,
-                    Age = int.Parse(worksheet.Cells[row, 2].Text),
-                    Grade = worksheet.Cells[row, 3].Text,
-                    Department = worksheet.Cells[row, 4].Text
+                    Employ_id = (worksheet.Cells[row, 1].Text),
+                    Username = worksheet.Cells[row, 2].Text,
+                    Age = int.Parse(worksheet.Cells[row, 3].Text),
+                    Grade = worksheet.Cells[row, 4].Text,
+                    Department = worksheet.Cells[row, 5].Text
                 });
             }
         }
@@ -66,29 +61,25 @@ public class UploadExcelController : ControllerBase
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             connection.Open();
-            string query = @"INSERT INTO Excel_sheet (Username, Age, Grade, Department) VALUES (@Username, @Age, @Grade, @Department)";
-
+            string query = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id ,@Username, @Age, @Grade, @Department)";
 
             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
-
-
                 foreach (var emp in employees)
                 {
+
+                    cmd.Parameters.AddWithValue("@Employ_id ", emp.Employ_id);
                     cmd.Parameters.AddWithValue("@Username", emp.Username);
                     cmd.Parameters.AddWithValue("@Age", emp.Age);
                     cmd.Parameters.AddWithValue("@Grade", emp.Grade);
                     cmd.Parameters.AddWithValue("@Department", emp.Department);
 
                     cmd.ExecuteNonQuery();
+
                 }
             }
-
-            }
-
-
-            return Ok("Excel uploaded and saved to database");
         }
+            return Ok("Excel uploaded and saved to database");
     }
 }
 

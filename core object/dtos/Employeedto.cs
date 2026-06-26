@@ -6,7 +6,7 @@ namespace Excel
 {
     public class Employee
     {
-      public  int Employ_id {  get; set; } 
+      public  string Employ_id {  get; set; } 
       public string Username {  get; set; }
         public int Age { get; set; }
       public string Grade {  get; set; }
