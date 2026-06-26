@@ -8,7 +8,7 @@ namespace Excel
     {
       public  int Employ_id {  get; set; } 
       public string Username {  get; set; }
-      public int Age { get; set; }
+        public int Age { get; set; }
       public string Grade {  get; set; }
       public string Department {  get; set; }
     }

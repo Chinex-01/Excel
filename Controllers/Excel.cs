@@ -58,6 +58,7 @@ public class UploadExcelController : ControllerBase
                 });
             }
         }
+
         string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
 
@@ -70,6 +71,8 @@ public class UploadExcelController : ControllerBase
 
             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
+
+
                 foreach (var emp in employees)
                 {
                     cmd.Parameters.AddWithValue("@Username", emp.Username);
@@ -80,13 +83,12 @@ public class UploadExcelController : ControllerBase
                     cmd.ExecuteNonQuery();
                 }
             }
+
+            }
+
+
             return Ok("Excel uploaded and saved to database");
         }
     }
 }
-
-
-
-
-
 
