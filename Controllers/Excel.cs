@@ -54,10 +54,29 @@ public class UploadExcelController : ControllerBase
             }
         }
 
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        using (var package = new ExcelPackage(new FileInfo(filePath)))
+        {
+            var worksheet = package.Workbook.Worksheets[0];
+
+            int rowCount = worksheet.Dimension.Rows;
+
+            // Start at row 2 assuming row 1 = headers
+            for (int row = 2; row <= rowCount; row++)
+            {
+                employees.Add(new Employee
+                {
+                    Username = worksheet.Cells[row, 1].Text,
+                    Age = int.Parse(worksheet.Cells[row, 2].Text),
+                    Grade = worksheet.Cells[row, 3].Text,
+                    Department = worksheet.Cells[row, 4].Text
+                });
+            }
+        }
+
         string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
-
-
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             connection.Open();
