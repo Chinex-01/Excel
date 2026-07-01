@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
-using List<Employee> employees = new List<Employee>();
 
 [ApiController]
 [Route("api/report")]
