@@ -38,6 +38,26 @@ public class UploadExcelController : ControllerBase
 
         return Ok("Upload successful");
 
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        using (var package = new ExcelPackage(new FileInfo(filePath)))
+        {
+            var worksheet = package.Workbook.Worksheets[0];
+
+            int rowCount = worksheet.Dimension.Rows;
+
+            // Start at row 2 assuming row 1 = headers
+            for (int row = 2; row <= rowCount; row++)
+            {
+                employees.Add(new Employee
+                {
+                    Username = worksheet.Cells[row, 1].Text,
+                    Age = int.Parse(worksheet.Cells[row, 2].Text),
+                    Grade = worksheet.Cells[row, 3].Text,
+                    Department = worksheet.Cells[row, 4].Text
+                });
+            }
+        }
         string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
 
@@ -50,8 +70,6 @@ public class UploadExcelController : ControllerBase
 
             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
-
-
                 foreach (var emp in employees)
                 {
                     cmd.Parameters.AddWithValue("@Username", emp.Username);
@@ -61,14 +79,14 @@ public class UploadExcelController : ControllerBase
 
                     cmd.ExecuteNonQuery();
                 }
-
             }
-
             return Ok("Excel uploaded and saved to database");
         }
     }
 }
 
-    
+
+
+
 
 
