@@ -1,11 +1,16 @@
+using System.Data;
+using System.Data.Common;
 using Excel;
 using Microsoft.Data.SqlClient;
+using List<Employee> employees = new List<Employee>();
 
 namespace Excel
 {
     public class Sqlconn
     {
-         string connectionString =
+        public static DbConn ()
+        {
+             string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
@@ -26,6 +31,7 @@ namespace Excel
 
                 }
             }
+        }
         }
     }
 }

@@ -1,10 +1,16 @@
+using Excel;
+using List<Employee> employees = new List<Employee>();
+
+
 namespace Excel
 {
     public class Read
     {
-         ExcelPackage.License.SetNonCommercialPersonal("Nonso");
-        using (var package = new ExcelPackage(new FileInfo(filePath)))
+        public static Reader ()
         {
+             ExcelPackage.License.SetNonCommercialPersonal("Nonso");
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
             var worksheet = package.Workbook.Worksheets[0];
 
             int rowCount = worksheet.Dimension.Rows;
@@ -21,6 +27,8 @@ namespace Excel
                     Department = worksheet.Cells[row, 5].Text
                 });
             }
+            }
         }
+        
     }
 }

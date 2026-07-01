@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
-
+using List<Employee> employees = new List<Employee>();
 
 [ApiController]
 [Route("api/report")]
@@ -12,8 +12,6 @@ public class UploadExcelController : ControllerBase
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
-      Public List<Employee> employees = new List<Employee>();
-
         if (file == null || file.Length == 0)
         {
               return BadRequest("No file uploaded");
@@ -53,7 +51,8 @@ public class UploadExcelController : ControllerBase
 
         await file.CopyToAsync(stream);
 
-        
+        Read.Reader();
+        Sqlconn.DbConn();
 
         return Ok("Excel uploaded and saved to database");
     }
