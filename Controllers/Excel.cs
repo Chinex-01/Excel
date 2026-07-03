@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
+using ClosedXML.Excel;
 
 [ApiController]
 [Route("api/report")]
 public class UploadExcelController : ControllerBase
 {
+    List<Employee> employees = new List<Employee>();
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
@@ -50,8 +52,8 @@ public class UploadExcelController : ControllerBase
 
         await file.CopyToAsync(stream);
 
-        Read.Reader();
-        Sqlconn.DbConn();
+        Read.Reader(employees, filePath);
+        Sqlconn.DbConn(employees);
 
         return Ok("Excel uploaded and saved to database");
     }

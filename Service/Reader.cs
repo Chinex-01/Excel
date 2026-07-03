@@ -1,12 +1,17 @@
 using Excel;
-using List<Employee> employees = new List<Employee>();
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using OfficeOpenXml;
+using System.ComponentModel;
+using ClosedXML.Excel;
+using System.Runtime.CompilerServices;
 
 
 namespace Excel
 {
     public class Read
     {
-        public static Reader ()
+        public static void Reader (List<Employee> employees , string filePath)
         {
              ExcelPackage.License.SetNonCommercialPersonal("Nonso");
             using (var package = new ExcelPackage(new FileInfo(filePath)))
