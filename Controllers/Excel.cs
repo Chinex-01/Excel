@@ -17,9 +17,9 @@ public class UploadExcelController : ControllerBase
 
         string filePath = await validation.Rain(file);
 
-        Read.Reader(employees, filePath);
+       var result = Read.Reader(employees, filePath);
 
-        Sqlconn.DbConn(employees);
+        Sqlconn.DbConn(result);
 
         return Ok("Excel uploaded and saved to database");
     }

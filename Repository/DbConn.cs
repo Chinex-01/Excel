@@ -1,9 +1,10 @@
+using ClosedXML.Excel;
 using Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
-using ClosedXML.Excel;
+using System.Data;
 
 namespace Excel
 {
@@ -20,17 +21,23 @@ namespace Excel
 
             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
-                foreach (var emp in employees)
-                {
-                    cmd.Parameters.AddWithValue("@Employ_id ", emp.Employ_id);
-                    cmd.Parameters.AddWithValue("@Username", emp.Username);
-                    cmd.Parameters.AddWithValue("@Age", emp.Age);
-                    cmd.Parameters.AddWithValue("@Grade", emp.Grade);
-                    cmd.Parameters.AddWithValue("@Department", emp.Department);
+                    cmd.Parameters.Add("@Employ_id", SqlDbType.VarChar, 5);
+                    cmd.Parameters.Add("@Username", System.Data.SqlDbType.NVarChar);
+                    cmd.Parameters.Add("@Age", System.Data.SqlDbType.Int);
+                    cmd.Parameters.Add("@Grade", System.Data.SqlDbType.NVarChar);
+                    cmd.Parameters.Add("@Department", System.Data.SqlDbType.NVarChar);
 
-                    cmd.ExecuteNonQuery();
+                    foreach (var emp in employees)
+                    {
+                        cmd.Parameters["@Employ_id"].Value = emp.Employ_id;
+                        cmd.Parameters["@Username"].Value = emp.Username;
+                        cmd.Parameters["@Age"].Value = emp.Age;
+                        cmd.Parameters["@Grade"].Value = emp.Grade;
+                        cmd.Parameters["@Department"].Value = emp.Department;
 
-                }
+                        cmd.ExecuteNonQuery();
+                    }
+                
             }
         }
 
