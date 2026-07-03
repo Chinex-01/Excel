@@ -9,7 +9,7 @@ namespace Excel
 {
     public class validation
     {
-        public static async Task  Rain(IFormFile file )
+        public static async Task<string> Rain( IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -49,6 +49,8 @@ namespace Excel
             await using var stream = new FileStream(filePath, FileMode.Create);
 
             await file.CopyToAsync(stream);
+
+            return filePath;
         }
     }
 }
