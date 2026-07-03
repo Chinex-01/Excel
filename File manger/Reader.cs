@@ -11,7 +11,7 @@ namespace Excel
 {
     public class Read
     {
-        public static void Reader (List<Employee> employees , string filePath)
+        public static List<Employee> Reader (List<Employee> employees , string filePath)
         {
              ExcelPackage.License.SetNonCommercialPersonal("Nonso");
             using (var package = new ExcelPackage(new FileInfo(filePath)))
@@ -33,6 +33,8 @@ namespace Excel
                 });
             }
             }
+
+            return employees; 
         }
         
     }
