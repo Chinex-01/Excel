@@ -1,14 +1,15 @@
-using System.Data;
-using System.Data.Common;
 using Excel;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using List<Employee> employees = new List<Employee>();
+using OfficeOpenXml;
+using System.ComponentModel;
+using ClosedXML.Excel;
 
 namespace Excel
 {
     public class Sqlconn
     {
-        public static DbConn ()
+        public static string DbConn (List<Employee> employees)
         {
              string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
@@ -32,6 +33,8 @@ namespace Excel
                 }
             }
         }
+
+             return ("Excel uploaded and saved to database");
         }
     }
 }
