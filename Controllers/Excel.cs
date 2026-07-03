@@ -14,8 +14,7 @@ public class UploadExcelController : ControllerBase
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
-
-        string filePath = await validation.Rain(file, @"C:\Users\onyeo\Desktop\Excel\wwwroot\upload");
+        string filePath = await validation.Rain(file);
         Read.Reader(employees, filePath);
         Sqlconn.DbConn(employees);
 
