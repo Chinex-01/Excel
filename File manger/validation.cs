@@ -49,6 +49,8 @@ namespace Excel
             await using var stream = new FileStream(filePath, FileMode.Create);
 
             await file.CopyToAsync(stream);
+
+            return filePath;
         }
     }
 }

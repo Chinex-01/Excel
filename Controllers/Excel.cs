@@ -10,12 +10,15 @@ using System.ComponentModel.DataAnnotations;
 [Route("api/report")]
 public class UploadExcelController : ControllerBase
 {
-    List<Employee> employees = new List<Employee>();
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
+        List<Employee> employees = new List<Employee>();
+
         string filePath = await validation.Rain(file);
+
         Read.Reader(employees, filePath);
+
         Sqlconn.DbConn(employees);
 
         return Ok("Excel uploaded and saved to database");
