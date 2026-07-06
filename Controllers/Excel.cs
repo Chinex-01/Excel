@@ -1,27 +1,34 @@
 ﻿using ClosedXML.Excel;
 using Excel;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using OfficeOpenXml;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
-[ApiController]
-[Route("api/report")]
-public class UploadExcelController : ControllerBase
+[HttpPost("upload")]
+public async Task<IActionResult> Upload_Excel(IFormFile file)
 {
-    [HttpPost("upload")]
-    public async Task<IActionResult> Upload_Excel(IFormFile file)
+    // Save uploaded file
+    var filePath = await Validation.Rain(file);
+
+    // Open the Excel file
+    using (var workbook = new XLWorkbook(filePath))
     {
-        List<Employee> employees = new List<Employee>();
+        var worksheet = workbook.Worksheet(1);
 
-        string filePath = await validation.Rain(file);
+        // Validate header
+        bool isValid = Validation.ValidateExcelHeader(worksheet);
 
-       var result = Read.Reader(employees, filePath);
+        if (isValid)
+        {
+            List<Employee> employees = new List<Employee>();
 
-        Sqlconn.DbConn(result);
+            var result = Read.Reader(employees, filePath);
 
-        return Ok("Excel uploaded and saved to database");
+            Sqlconn.DbConn(result);
+
+            return Ok("Excel uploaded and saved to database.");
+        }
+        else
+        {
+            return BadRequest("Invalid Excel template. Column names do not match.");
+        }
     }
 }
-
