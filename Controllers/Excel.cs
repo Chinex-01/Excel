@@ -36,7 +36,7 @@ public class UploadExcelController : ControllerBase
             }
             else
             {
-                return BadRequest("Invalid Excel template. Column names do not match.");
+                return BadRequest("check your file .");
             }
         }
     }
