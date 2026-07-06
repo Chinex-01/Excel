@@ -1,34 +1,43 @@
 ﻿using ClosedXML.Excel;
 using Excel;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using OfficeOpenXml;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
-[HttpPost("upload")]
-public async Task<IActionResult> Upload_Excel(IFormFile file)
+[ApiController]
+[Route("api/report")]
+public class UploadExcelController : ControllerBase
 {
-    // Save uploaded file
-    var filePath = await Validation.Rain(file);
-
-    // Open the Excel file
-    using (var workbook = new XLWorkbook(filePath))
+    [HttpPost("upload")]
+    public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
-        var worksheet = workbook.Worksheet(1);
+        // Save uploaded file
+        var filePath = await Validation.Rain(file);
 
-        // Validate header
-        bool isValid = Validation.ValidateExcelHeader(worksheet);
-
-        if (isValid)
+        // Open the Excel file
+        using (var workbook = new XLWorkbook(filePath))
         {
-            List<Employee> employees = new List<Employee>();
+            var worksheet = workbook.Worksheet(1);
 
-            var result = Read.Reader(employees, filePath);
+            // Validate header
+            bool isValid = Validation.ValidateExcelHeader(worksheet);
 
-            Sqlconn.DbConn(result);
+            if (isValid)
+            {
+                List<Employee> employees = new List<Employee>();
 
-            return Ok("Excel uploaded and saved to database.");
-        }
-        else
-        {
-            return BadRequest("Invalid Excel template. Column names do not match.");
+                var result = Read.Reader(employees, filePath);
+
+                Sqlconn.DbConn(result);
+
+                return Ok("Excel uploaded and saved to database.");
+            }
+            else
+            {
+                return BadRequest("check your file .");
+            }
         }
     }
 }
