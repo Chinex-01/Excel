@@ -49,9 +49,9 @@ namespace Excel
                 string excelHeader = worksheet.Cell(1, i + 1).GetString().Trim().ToLower();
                 string expectedHeader = requiredColumns[i].Trim().ToLower();
 
-                if (excelHeader != expectedHeader)
+                if  (!requiredColumns.Any(c => c.Trim().ToLower().ToString() == excelHeader))
                 {
-                    return false;
+                    return true;
                 }
             }
             return true;
