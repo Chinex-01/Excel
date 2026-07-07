@@ -15,12 +15,11 @@ public class UploadExcelController : ControllerBase
     {
         var filePath = await Validation.Rain(file);
 
-        // Open the Excel file
+     
         using (var workbook = new XLWorkbook(filePath))
         {
             var worksheet = workbook.Worksheet(1);
 
-            // Validate header
             bool isValid = Validation.ValidateExcelHeader(worksheet);
 
             if (isValid)

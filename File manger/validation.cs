@@ -44,8 +44,6 @@ namespace Excel
             {
                 return false;
             }
-
-            // Compare each header
             for (int i = 0; i < requiredColumns.Count; i++)
             {
                 string excelHeader = worksheet.Cell(1, i + 1).GetString().Trim().ToLower();
@@ -56,7 +54,6 @@ namespace Excel
                     return false;
                 }
             }
-
             return true;
         }
     }
