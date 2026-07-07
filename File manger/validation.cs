@@ -33,11 +33,11 @@ namespace Excel
         {
             var requiredColumns = new List<string>
             {
-                "employ id",
-                "username",
-                "age",
-                "grade",
-                "department"
+                "Employ_id",
+                "Username",
+                "Age",
+                "Grade",
+                "Department"
             };
 
             if (worksheet.Row(1).CellsUsed().Count() != requiredColumns.Count)

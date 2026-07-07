@@ -37,10 +37,8 @@ namespace Excel
 
                         cmd.ExecuteNonQuery();
                     }
-                
             }
         }
-
              return ("Excel uploaded and saved to database");
         }
     }
