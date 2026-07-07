@@ -47,11 +47,10 @@ namespace Excel
             for (int i = 0; i < requiredColumns.Count; i++)
             {
                 string excelHeader = worksheet.Cell(1, i + 1).GetString().Trim().ToLower();
-                string expectedHeader = requiredColumns[i].Trim().ToLower();
-
+                
                 if  (!requiredColumns.Any(c => c.Trim().ToLower().ToString() == excelHeader))
                 {
-                    return true;
+                    return true ;
                 }
             }
             return true;
