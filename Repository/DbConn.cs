@@ -5,43 +5,18 @@ using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
 using System.Data;
-using ClosedXML.Excel;
+
 
 namespace Excel
 {
     public class Sqlconn
     {
-      /*  public static string test ()
-        {
-            List<Employee> employees = new List<Employee>()
-            {
-                "Employ_id",
-                "username ",
-                "age"
-            };
-
-            if (Worksheet .row(1).cellused().trim.tolower().count() != employees.Count())
-            {
-                return false; 
-            }
-
-            for (var i = 0, i < employees.Count(), i++)
-            {
-                string valueheader = Worksheet.cells(1,i + 1).tostring().trim().Tolower();
-                string expectedheader = employees[].ToLower().Trim().tostring();
-
-                if (valueheader == expectedheader)
-                {
-                    return true;
-                }
-            }
-        }
-
-        */
         public static string DbConn (List<Employee> employees)
         {
+
              string connectionString =
         @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
+
         using (SqlConnection connection = new SqlConnection(connectionString))
         {
             connection.Open();
