@@ -9,20 +9,22 @@ using System.Data;
 
 namespace Excel
 {
-    public class Sqlconn
+    public class SqlConn 
     {
-        public static string DbConn (List<Employee> employees)
+        private readonly string _connectionString;
+        public SqlConn(IConfiguration configuration )
         {
-
-             string connectionString =
-        @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
-
-        using (SqlConnection connection = new SqlConnection(connectionString))
+            _connectionString = configuration.GetConnectionString("EmployeeDb")
+                ?? throw new ArgumentException("Connection string is required.");
+        }
+        public string DbConn (List<Employee> employees)
         {
-            connection.Open();
-            string query = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id ,@Username, @Age, @Grade, @Department)";
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+           {
+                connection.Open();
+                string query = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id ,@Username, @Age, @Grade, @Department)";
 
-            using (SqlCommand cmd = new SqlCommand(query, connection))
+             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
                     cmd.Parameters.Add("@Employ_id", SqlDbType.VarChar, 5);
                     cmd.Parameters.Add("@Username", System.Data.SqlDbType.NVarChar);
@@ -41,7 +43,7 @@ namespace Excel
                         cmd.ExecuteNonQuery();
                     }
             }
-        }
+            }
              return ("Excel uploaded and saved to database");
         }
     }
