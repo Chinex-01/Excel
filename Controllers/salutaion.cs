@@ -1,17 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using nameService;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Greeting.Controllers
 {
     [ApiController]
 
     [Route("api/Name")]
-    public class Name : Controller
+    public class NameController : Controller
     {
         [HttpPost]
-        public string Namee(string Name)
+        public string Namee(string name)
         {
-            return $"Welcome {Name}";
+            validname validator = new validname();
+
+            if (!validator.IsValid(name))
+            {
+                return "Invalid name.";
+            }
+
+            return $"Welcome {name}";
         }
     }
-}
 
+}
