@@ -38,7 +38,6 @@ public class UploadExcelController : ControllerBase
 
                 var result = Read.Reader(employees, filePath);
 
-
                 _sqlConn.DbConn(result);
 
                 return Ok("Excel uploaded and saved to database.");

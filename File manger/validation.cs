@@ -50,7 +50,7 @@ namespace Excel
                 
                 if  (!requiredColumns.Any(c => c.Trim().ToLower().ToString() == excelHeader))
                 {
-                    return true ;
+                    return false ;
                 }
             }
             return true;

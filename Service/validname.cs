@@ -8,7 +8,6 @@
             {
                 return false;
             }
-
             if (name.Contains("@") || name.Contains("#") || name.Contains("1") || name.Contains("()"))
             {
                 return false;

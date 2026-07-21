@@ -17,7 +17,6 @@ namespace Greeting.Controllers
             {
                 return "Invalid name.";
             }
-
             return $"Welcome {name}";
         }
     }

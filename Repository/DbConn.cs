@@ -12,7 +12,7 @@ namespace Excel
     public class SqlConn 
     {
         private readonly string _connectionString;
-        public SqlConn(IConfiguration configuration )
+        public SqlConn(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("EmployeeDb")
                 ?? throw new ArgumentException("Connection string is required.");
