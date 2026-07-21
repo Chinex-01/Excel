@@ -12,9 +12,11 @@ using System.ComponentModel.DataAnnotations;
 public class UploadExcelController : ControllerBase
 {
     private readonly SqlConn _sqlConn;
-    public UploadExcelController(SqlConn sqlConn)
+    private readonly SqlConn2 _sqlConn2;
+    public UploadExcelController(SqlConn sqlConn, SqlConn2 sqlConn2)
     {
         _sqlConn = sqlConn;
+        _sqlConn2 = sqlConn2;
     }
 
     [HttpPost("upload")]
@@ -34,6 +36,11 @@ public class UploadExcelController : ControllerBase
 
             if (isValid)
             {
+                string referenceNumber = ReferenceNumberGenerate.Generate();
+                double mean = Validation.CalculateMeanAge(worksheet);
+
+                _sqlConn2.SaveAnalysis(referenceNumber, mean);
+
                 List<Employee> employees = new List<Employee>();
 
                 var result = Read.Reader(employees, filePath);
@@ -48,4 +55,5 @@ public class UploadExcelController : ControllerBase
             }
         }
     }
-}
+   
+    }

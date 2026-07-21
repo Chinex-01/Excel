@@ -4,7 +4,7 @@ namespace Excel
 {
     public class Validation
     {
-        public static async Task<(string FilePath, string ReferenceNumber)> Rain(IFormFile file)
+        public static async Task<string> Rain(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -19,8 +19,6 @@ namespace Excel
                 throw new Exception("Only Excel files (.xlsx, .xls) are allowed.");
             }
 
-            string referenceNumber = ReferenceNumberGenerate.Generate();
-
             var filePath = Path.Combine("upload", file.FileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -28,7 +26,7 @@ namespace Excel
                 await file.CopyToAsync(stream);
             }
 
-            return (filePath, referenceNumber);
+            return filePath;
         }
         public static bool ValidateExcelHeader(IXLWorksheet worksheet)
         {
