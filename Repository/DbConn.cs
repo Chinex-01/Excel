@@ -5,49 +5,26 @@ using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
 using System.Data;
-using ClosedXML.Excel;
+
 
 namespace Excel
 {
-    public class Sqlconn
+    public class SqlConn 
     {
-      /*  public static string test ()
+        private readonly string _connectionString;
+        public SqlConn(IConfiguration configuration)
         {
-            List<Employee> employees = new List<Employee>()
-            {
-                "Employ_id",
-                "username ",
-                "age"
-            };
-
-            if (Worksheet .row(1).cellused().trim.tolower().count() != employees.Count())
-            {
-                return false; 
-            }
-
-            for (var i = 0, i < employees.Count(), i++)
-            {
-                string valueheader = Worksheet.cells(1,i + 1).tostring().trim().Tolower();
-                string expectedheader = employees[].ToLower().Trim().tostring();
-
-                if (valueheader == expectedheader)
-                {
-                    return true;
-                }
-            }
+            _connectionString = configuration.GetConnectionString("EmployeeDb")
+                ?? throw new ArgumentException("Connection string is required.");
         }
-
-        */
-        public static string DbConn (List<Employee> employees)
+        public string DbConn (List<Employee> employees)
         {
-             string connectionString =
-        @"Server=(localdb)\MSSQLLocalDB;Database=Employee;Trusted_Connection=True;";
-        using (SqlConnection connection = new SqlConnection(connectionString))
-        {
-            connection.Open();
-            string query = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id ,@Username, @Age, @Grade, @Department)";
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+           {
+                connection.Open();
+                string query = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id ,@Username, @Age, @Grade, @Department)";
 
-            using (SqlCommand cmd = new SqlCommand(query, connection))
+             using (SqlCommand cmd = new SqlCommand(query, connection))
             {
                     cmd.Parameters.Add("@Employ_id", SqlDbType.VarChar, 5);
                     cmd.Parameters.Add("@Username", System.Data.SqlDbType.NVarChar);
@@ -66,7 +43,7 @@ namespace Excel
                         cmd.ExecuteNonQuery();
                     }
             }
-        }
+            }
              return ("Excel uploaded and saved to database");
         }
     }

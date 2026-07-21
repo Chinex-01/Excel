@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 using Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -10,16 +11,25 @@ using System.ComponentModel.DataAnnotations;
 [Route("api/report")]
 public class UploadExcelController : ControllerBase
 {
+    private readonly SqlConn _sqlConn;
+    public UploadExcelController(SqlConn sqlConn)
+    {
+        _sqlConn = sqlConn;
+    }
+
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
+
+        // Save uploaded file
         var filePath = await Validation.Rain(file);
 
-     
+        // Open the Excel file
         using (var workbook = new XLWorkbook(filePath))
         {
             var worksheet = workbook.Worksheet(1);
 
+            // Validate header
             bool isValid = Validation.ValidateExcelHeader(worksheet);
 
             if (isValid)
@@ -28,10 +38,10 @@ public class UploadExcelController : ControllerBase
 
                 var result = Read.Reader(employees, filePath);
 
-                Sqlconn.DbConn(result);
+                _sqlConn.DbConn(result);
 
                 return Ok("Excel uploaded and saved to database.");
-            }
+            } 
             else
             {
                 return BadRequest("check your file .");

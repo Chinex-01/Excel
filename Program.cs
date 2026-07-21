@@ -1,15 +1,22 @@
 using ClosedXML.Excel;
-using Swashbuckle.AspNetCore;
+using Excel;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
+using Swashbuckle.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+
+
+string connectionString =
+    builder.Configuration.GetConnectionString("EmployeeDb");
+
+// Program.cs — replace the AddScoped factory with this:
+builder.Services.AddScoped<SqlConn>();
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
