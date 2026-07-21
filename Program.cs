@@ -14,7 +14,9 @@ string connectionString =
     builder.Configuration.GetConnectionString("EmployeeDb");
 
 // Program.cs — replace the AddScoped factory with this:
+
 builder.Services.AddScoped<SqlConn>();
+builder.Services.AddScoped<SqlConn2>();
 
 builder.Services.AddControllers();
 
