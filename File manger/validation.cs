@@ -1,11 +1,10 @@
 ﻿using ClosedXML.Excel;
 using System.Data;
-
 namespace Excel
 {
     public class Validation
     {
-        public static async Task<string> Rain(IFormFile file)
+        public static async Task<(string FilePath, string ReferenceNumber)> Rain(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -20,6 +19,8 @@ namespace Excel
                 throw new Exception("Only Excel files (.xlsx, .xls) are allowed.");
             }
 
+            string referenceNumber = ReferenceNumberGenerate.Generate();
+
             var filePath = Path.Combine("upload", file.FileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -27,7 +28,7 @@ namespace Excel
                 await file.CopyToAsync(stream);
             }
 
-            return filePath;
+            return (filePath, referenceNumber);
         }
         public static bool ValidateExcelHeader(IXLWorksheet worksheet)
         {
@@ -47,13 +48,54 @@ namespace Excel
             for (int i = 0; i < requiredColumns.Count; i++)
             {
                 string excelHeader = worksheet.Cell(1, i + 1).GetString().Trim().ToLower();
-                
-                if  (!requiredColumns.Any(c => c.Trim().ToLower().ToString() == excelHeader))
+
+                if (!requiredColumns.Any(c => c.Trim().ToLower().ToString() == excelHeader))
                 {
-                    return false ;
+                    return false;
                 }
             }
             return true;
         }
+           public static double CalculateMeanAge(IXLWorksheet worksheet)
+          {
+            // Find which column index "Age" is in (in case column order isn't fixed)
+
+            int ageColumnIndex = -1;
+            var headerRow = worksheet.Row(1);
+
+            foreach (var cell in headerRow.CellsUsed())
+            {
+                if (cell.GetString().Trim().Equals("Age", StringComparison.OrdinalIgnoreCase))
+                {
+                    ageColumnIndex = cell.Address.ColumnNumber;
+                    break;
+                }
+            }
+            if (ageColumnIndex == -1)
+            {
+                throw new Exception("Age column not found in worksheet.");
+            }
+
+              var ages = new List<double>();
+              int lastRow = worksheet.LastRowUsed().RowNumber();
+
+            for (int row = 2; row <= lastRow; row++)
+            {
+                var cell = worksheet.Cell(row, ageColumnIndex);
+
+                if (!cell.IsEmpty() && cell.TryGetValue(out double ageValue))
+                {
+                    ages.Add(ageValue);
+                }
+            }
+
+            if (ages.Count == 0)
+            {
+                throw new Exception("No valid Age values found to calculate mean.");
+            }
+
+            return ages.Average();
+        }
+
     }
 }
