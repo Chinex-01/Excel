@@ -6,6 +6,8 @@ using Microsoft.Data.SqlClient;
 using OfficeOpenXml;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Serilog;
+using Serilog.Context;
 
 [ApiController]
 [Route("api/report")]
@@ -26,6 +28,7 @@ public class UploadExcelController : ControllerBase
     [HttpPost("upload")]
     public async Task<IActionResult> Upload_Excel(IFormFile file)
     {
+        string referenceNumber = null;
         try
         {
             // Save uploaded file
@@ -41,7 +44,7 @@ public class UploadExcelController : ControllerBase
 
                 if (isValid)
                 {
-                    string referenceNumber = ReferenceNumberGenerate.Generate();
+                     referenceNumber = ReferenceNumberGenerate.Generate();
                     double mean = Validation.CalculateMeanAge(worksheet);
 
                     _sqlConn2.SaveAnalysis(referenceNumber, mean);
@@ -52,11 +55,14 @@ public class UploadExcelController : ControllerBase
 
                     _sqlConn.DbConn(result);
 
+                    _logger.LogInformation("Excel upload succeeded. FileName: {FileName}, ReferenceNumber: {ReferenceNumber}",file.FileName, referenceNumber);
+
                     return Ok("Excel uploaded and saved to database.");
                 }
                 else
                 {
-                    return BadRequest("check your file .");
+                    _logger.LogWarning("Invalid Excel header. FileName: {FileName}", file.FileName);
+                    return BadRequest("Check your file.");
                 }
             }
         }
@@ -68,7 +74,7 @@ public class UploadExcelController : ControllerBase
         catch (IOException ioEx)
         {
             _logger.LogError(ioEx, "File I/O error while processing uploaded Excel file.");
-            return StatusCode(500, "An error occurred while reading/saving the uploaded file.");
+            return StatusCode(500, " error occurred while reading the file.");
         }
         catch (Exception ex)
         {

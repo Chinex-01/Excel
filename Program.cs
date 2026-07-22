@@ -3,15 +3,28 @@ using Excel;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Swashbuckle.AspNetCore;
-using Serilog;
 using Serilog.Context;
+
+
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day,   // creates log-20260722.txt, log-20260723.txt, etc.
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog(); // 👈
 
 
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddControllers();
 
 string connectionString =
     builder.Configuration.GetConnectionString("EmployeeDb");
