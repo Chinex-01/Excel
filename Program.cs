@@ -3,8 +3,11 @@ using Excel;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Swashbuckle.AspNetCore;
-
+using Serilog;
+using Serilog.Context;
 var builder = WebApplication.CreateBuilder(args);
+
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();

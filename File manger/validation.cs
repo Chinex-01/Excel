@@ -57,7 +57,6 @@ namespace Excel
            public static double CalculateMeanAge(IXLWorksheet worksheet)
           {
             // Find which column index "Age" is in (in case column order isn't fixed)
-
             int ageColumnIndex = -1;
             var headerRow = worksheet.Row(1);
 
