@@ -1,10 +1,11 @@
 using ClosedXML.Excel;
 using Excel;
+using Excel.Service;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
-using Swashbuckle.AspNetCore;
-using Serilog.Context;
 using Serilog;
+using Serilog.Context;
+using Swashbuckle.AspNetCore;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -24,13 +25,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-string connectionString =
-    builder.Configuration.GetConnectionString("EmployeeDb");
+string connectionString = builder.Configuration.GetConnectionString("EmployeeDb");
 
 // Program.cs — replace the AddScoped factory with this:
 builder.Services.AddScoped<SqlConn>();
 builder.Services.AddScoped<SqlConn2>();
 builder.Services.AddScoped<Validation>();
+builder.Services.AddScoped<ProcessService>();
 builder.Services.AddScoped<ReferenceNumberGenerate>();
 
 builder.Services.AddControllers();
