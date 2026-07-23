@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Swashbuckle.AspNetCore;
 using Serilog.Context;
-
-
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -30,9 +28,10 @@ string connectionString =
     builder.Configuration.GetConnectionString("EmployeeDb");
 
 // Program.cs — replace the AddScoped factory with this:
-
 builder.Services.AddScoped<SqlConn>();
 builder.Services.AddScoped<SqlConn2>();
+builder.Services.AddScoped<Validation>();
+builder.Services.AddScoped<ReferenceNumberGenerate>();
 
 builder.Services.AddControllers();
 
