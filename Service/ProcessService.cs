@@ -6,20 +6,17 @@ namespace Excel.Service
     public class ProcessService
     {
         private readonly SqlConn _sqlConn;
-        private readonly SqlConn2 _sqlConn2;
         private readonly Validation _validation;
         private readonly ReferenceNumberGenerate _refGen;
         private readonly ILogger<ProcessService> _logger;
 
         public ProcessService(
             SqlConn sqlConn,
-            SqlConn2 sqlConn2,
             Validation validation,
             ReferenceNumberGenerate refGen,
             ILogger<ProcessService> logger)
         {
             _sqlConn = sqlConn;
-            _sqlConn2 = sqlConn2;
             _validation = validation;
             _refGen = refGen;
             _logger = logger;
@@ -29,7 +26,6 @@ namespace Excel.Service
         {
             const string method = nameof(ProcessExcelUpload);
             string referenceNumber = null;
-
             try
             {
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. FileName={FileName}", method, file?.FileName);
@@ -49,16 +45,13 @@ namespace Excel.Service
                     _logger.LogWarning("[ProcessService.{Method}] Invalid Excel header. FileName={FileName}", method, file.FileName);
                     throw new InvalidHeaderException("Check your file.");
                 }
-
                 referenceNumber = _refGen.Generate();
                 double mean = _validation.CalculateMeanAge(worksheet);
-
-                _sqlConn2.SaveAnalysis(referenceNumber, mean);
 
                 List<Employee> employees = new List<Employee>();
                 var result = Read.Reader(employees, filePath);
 
-                _sqlConn.DbConn(result);
+                _sqlConn.DbConn(employees, referenceNumber, mean);
 
                 _logger.LogInformation(
                     "[ProcessService.{Method}] Excel upload succeeded. FileName={FileName}, ReferenceNumber={ReferenceNumber}",
@@ -70,19 +63,11 @@ namespace Excel.Service
             {
                 throw;
             }
-            catch (SqlException sqlEx)
-            {
-                _logger.LogError(sqlEx,
+            catch (SqlException sqlex) {
+                _logger.LogError(sqlex,
                     "[ProcessService.{Method}] Database error while processing uploaded Excel file. FileName={FileName}, ReferenceNumber={ReferenceNumber}",
                     method, file?.FileName, referenceNumber);
-                throw new ProcessException("A database error occurred while saving the data.", sqlEx);
-            }
-            catch (IOException ioEx)
-            {
-                _logger.LogError(ioEx,
-                    "[ProcessService.{Method}] File I/O error while processing uploaded Excel file. FileName={FileName}",
-                    method, file?.FileName);
-                throw new ProcessException("An error occurred while reading the file.", ioEx);
+                throw new ProcessException("A database error occurred while saving the data.", sqlex);
             }
             catch (Exception ex)
             {
@@ -93,12 +78,10 @@ namespace Excel.Service
             }
         }
     }
-
     public class InvalidHeaderException : Exception
     {
         public InvalidHeaderException(string message) : base(message) { }
     }
-
     public class ProcessException : Exception
     {
         public ProcessException(string message, Exception inner) : base(message, inner) { }
