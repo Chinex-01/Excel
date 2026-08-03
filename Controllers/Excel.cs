@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/report")]
+[Authorize]
 
 public class UploadExcelController : ControllerBase
 {
