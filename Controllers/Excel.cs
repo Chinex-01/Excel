@@ -1,8 +1,10 @@
 ﻿using Excel.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/report")]
+
 public class UploadExcelController : ControllerBase
 {
     private readonly ProcessService _processService;

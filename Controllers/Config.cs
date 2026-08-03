@@ -110,10 +110,16 @@ namespace ATM_API.Controllers
                 }
 
                 string dbUsername = reader["Username"].ToString()!;
+                string[] roles = { "Admin", "Guest User", "User" };
+                Random random = new Random();
+                string assignedRole = roles[random.Next(roles.Length)];
 
                 List<Claim> claims =
                 [
-                    new Claim(ClaimTypes.Name, dbUsername)
+                    new Claim(ClaimTypes.Name, dbUsername),
+                    new Claim(ClaimTypes.Role, assignedRole),
+                    new Claim(JwtRegisteredClaimNames.Exp,
+                    new DateTimeOffset(DateTime.UtcNow.AddHours(1)).ToUnixTimeSeconds().ToString(),ClaimValueTypes.Integer64)
                 ];
 
                 SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
@@ -127,9 +133,7 @@ namespace ATM_API.Controllers
                     issuer: _configuration["Jwt:Issuer"],
                     audience: _configuration["Jwt:Audience"],
                     claims: claims,
-                    expires: DateTime.Now.AddMinutes(
-                        Convert.ToDouble(
-                            _configuration["Jwt:ExpireMinutes"])),
+                   expires: DateTime.UtcNow.AddHours(1),
                     signingCredentials: credentials);
 
                 string jwt = new JwtSecurityTokenHandler().WriteToken(token);
