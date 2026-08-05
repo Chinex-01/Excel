@@ -31,8 +31,6 @@ namespace Excel.Service
             try
             {
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
-
-                // Reject a RequestId that has already been used today
                 if (_sqlConn.IsDuplicateRequestToday(requestId))
                 {
                     _logger.LogWarning("[ProcessService.{Method}] Duplicate RequestId for today. RequestId={RequestId}", method, requestId);
