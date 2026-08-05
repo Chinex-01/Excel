@@ -25,7 +25,13 @@ namespace Excel.Service
                 configuration.GetConnectionString("EmployeeDb")
                 ?? throw new ArgumentException("Connection string is required.");
         }
-
+        string GenerateRoleId()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 5)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
         public async Task<LoginResult> LoginAsync(string username, string password)
         {
             try
@@ -78,10 +84,7 @@ namespace Excel.Service
 
                 await connection.OpenAsync();
 
-                string sql = @"SELECT Username
-                               FROM USERS
-                               WHERE Username=@Username
-                               AND Hashed_password=@Hashed_password";
+                string sql = @"SELECT Username FROM USERS WHERE Username=@Username AND Hashed_password=@Hashed_password";
 
                 using SqlCommand command = new(sql, connection);
 
@@ -104,19 +107,25 @@ namespace Excel.Service
 
                 string[] roles = { "Admin", "Guest User", "User" };
                 string assignedRole = roles[new Random().Next(roles.Length)];
+                string roleId = GenerateRoleId();
+
+                string insertSql = @"INSERT INTO Roles (RoleId, RoleName) VALUES (@RoleId, @RoleName)";
+                using (SqlCommand insertCmd = new SqlCommand(insertSql, connection))
+                {
+                    insertCmd.Parameters.AddWithValue("@RoleId", roleId);
+                    insertCmd.Parameters.AddWithValue("@RoleName", assignedRole);
+                    insertCmd.ExecuteNonQuery();
+                }
 
                 List<Claim> claims =
                 [
                     new Claim(ClaimTypes.Name, dbUsername),
-                    new Claim(ClaimTypes.Role, assignedRole)
+                    new Claim(ClaimTypes.Role, assignedRole)  
                 ];
 
-                var key = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 
-                var credentials = new SigningCredentials(
-                    key,
-                    SecurityAlgorithms.HmacSha256);
+                var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 JwtSecurityToken token = new(
                     issuer: _configuration["Jwt:Issuer"],

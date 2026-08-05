@@ -24,8 +24,19 @@ namespace Excel
                 throw;
             }
         }
+        public async Task LogRequestAsync(string requestId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
 
-        public bool IsDuplicateRequestToday(Guid requestId)
+            const string query = @"INSERT INTO AuditLog (RequestId) VALUES (@RequestId);";
+
+            await using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@RequestId", requestId);
+
+            await command.ExecuteNonQueryAsync();
+        }
+        public bool IsDuplicateRequestToday(string requestId)
         {
             const string method = nameof(IsDuplicateRequestToday);
             try
@@ -33,9 +44,7 @@ namespace Excel
                 using var connection = new SqlConnection(_connectionString);
                 connection.Open();
 
-                const string query = @"SELECT COUNT(1) FROM UploadRequest
-                                       WHERE RequestId = @RequestId
-                                         AND CAST(RequestDate AS DATE) = CAST(GETDATE() AS DATE)";
+                const string query = @"SELECT COUNT(1) FROM AuditLog WHERE RequestId = @RequestId AND CAST(Date AS DATE) = CAST(GETDATE() AS DATE)";
 
                 using var cmd = new SqlCommand(query, connection);
                 cmd.Parameters.AddWithValue("@RequestId", requestId);
@@ -51,14 +60,14 @@ namespace Excel
             }
         }
 
-        public string DbConn(List<Employee> employees, string referenceNumber, double mean, Guid requestId)
+        public string DbConn(List<Employee> employees, string referenceNumber, double mean)
         {
             const string method = nameof(DbConn);
             try
             {
                 _logger.LogInformation(
                     "[SqlConn.{Method}] Starting save. EmployeeCount={Count}, ReferenceNumber={ReferenceNumber}, Mean={Mean}, RequestId={RequestId}",
-                    method, employees?.Count ?? 0, referenceNumber, mean, requestId);
+                    method, employees?.Count ?? 0, referenceNumber, mean);
 
                 using var connection = new SqlConnection(_connectionString);
                 connection.Open();

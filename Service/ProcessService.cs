@@ -22,10 +22,12 @@ namespace Excel.Service
             _logger = logger;
         }
 
-        public async Task<string> ProcessExcelUpload(IFormFile file, Guid requestId)
+        public async Task<string> ProcessExcelUpload(IFormFile file)
         {
             const string method = nameof(ProcessExcelUpload);
             string referenceNumber = null;
+            var requestId = Guid.NewGuid().ToString();
+
             try
             {
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
@@ -36,6 +38,8 @@ namespace Excel.Service
                     _logger.LogWarning("[ProcessService.{Method}] Duplicate RequestId for today. RequestId={RequestId}", method, requestId);
                     throw new DuplicateRequestException($"RequestId '{requestId}' has already been submitted today.");
                 }
+
+                await _sqlConn.LogRequestAsync(requestId);
 
                 // Save uploaded file
                 var filePath = await _validation.Rain(file);
@@ -58,7 +62,7 @@ namespace Excel.Service
                 List<Employee> employees = new List<Employee>();
                 var result = Read.Reader(employees, filePath);
 
-                _sqlConn.DbConn(employees, referenceNumber, mean, requestId);
+                _sqlConn.DbConn(employees, referenceNumber, mean );
 
                 _logger.LogInformation(
                     "[ProcessService.{Method}] Excel upload succeeded. RequestId={RequestId}, FileName={FileName}, ReferenceNumber={ReferenceNumber}",
