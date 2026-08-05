@@ -3,8 +3,8 @@ using Excel.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Serilog;
-using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 Log.Logger = new LoggerConfiguration()
@@ -25,16 +25,13 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new()
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Info = new()
-        {
-            Title = "Excel API",
-            Version = "v1"
-        }
+        Title = "Excel API",
+        Version = "v1"
     });
 
-    options.AddSecurityDefinition("Bearer", new()
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
@@ -44,13 +41,27 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enter JWT Token"
     });
 
-    options.OperationFilter<SecurityRequirementsOperationFilter>(false, "Bearer");
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 builder.Services.AddScoped<SqlConn>();
 builder.Services.AddScoped<Validation>();
 builder.Services.AddScoped<ProcessService>();
 builder.Services.AddScoped<ReferenceNumberGenerate>();
+builder.Services.AddScoped<IConfigService, ConfigService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -76,7 +87,6 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseSwagger();
-
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Excel API V1");
@@ -84,10 +94,8 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
