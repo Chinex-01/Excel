@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/report")]
-[Authorize]
+[Authorize(Roles = "Admin, User")]
 
 public class UploadExcelController : ControllerBase
 {
@@ -18,20 +18,31 @@ public class UploadExcelController : ControllerBase
     }
 
     [HttpPost("upload")]
-    public async Task<IActionResult> Upload_Excel(IFormFile file)
+    public async Task<IActionResult> Upload_Excel([FromForm] UploadExcelRequest request)
     {
         const string method = nameof(Upload_Excel);
 
-        _logger.LogInformation("[UploadExcelController.{Method}] Received upload request. FileName={FileName}", method, file?.FileName);
+        _logger.LogInformation(
+            "[UploadExcelController.{Method}] Received upload request. RequestId={RequestId}, FileName={FileName}",
+            method, request?.RequestId, request?.File?.FileName);
+
+        if (request is null || request.RequestId == Guid.Empty)
+        {
+            return BadRequest("A valid RequestId is required.");
+        }
 
         try
         {
-            var message = await _processService.ProcessExcelUpload(file);
+            var message = await _processService.ProcessExcelUpload(request.File, request.RequestId);
             return Ok(message);
         }
         catch (InvalidHeaderException ex)
         {
             return BadRequest(ex.Message);
+        }
+        catch (DuplicateRequestException ex)
+        {
+            return Conflict(ex.Message);
         }
         catch (ProcessException ex)
         {

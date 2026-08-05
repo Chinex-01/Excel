@@ -22,13 +22,20 @@ namespace Excel.Service
             _logger = logger;
         }
 
-        public async Task<string> ProcessExcelUpload(IFormFile file)
+        public async Task<string> ProcessExcelUpload(IFormFile file, Guid requestId)
         {
             const string method = nameof(ProcessExcelUpload);
             string referenceNumber = null;
             try
             {
-                _logger.LogInformation("[ProcessService.{Method}] Upload started. FileName={FileName}", method, file?.FileName);
+                _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
+
+                // Reject a RequestId that has already been used today
+                if (_sqlConn.IsDuplicateRequestToday(requestId))
+                {
+                    _logger.LogWarning("[ProcessService.{Method}] Duplicate RequestId for today. RequestId={RequestId}", method, requestId);
+                    throw new DuplicateRequestException($"RequestId '{requestId}' has already been submitted today.");
+                }
 
                 // Save uploaded file
                 var filePath = await _validation.Rain(file);
@@ -51,15 +58,19 @@ namespace Excel.Service
                 List<Employee> employees = new List<Employee>();
                 var result = Read.Reader(employees, filePath);
 
-                _sqlConn.DbConn(employees, referenceNumber, mean);
+                _sqlConn.DbConn(employees, referenceNumber, mean, requestId);
 
                 _logger.LogInformation(
-                    "[ProcessService.{Method}] Excel upload succeeded. FileName={FileName}, ReferenceNumber={ReferenceNumber}",
-                    method, file.FileName, referenceNumber);
+                    "[ProcessService.{Method}] Excel upload succeeded. RequestId={RequestId}, FileName={FileName}, ReferenceNumber={ReferenceNumber}",
+                    method, requestId, file.FileName, referenceNumber);
 
                 return "Excel uploaded and saved to database.";
             }
             catch (InvalidHeaderException)
+            {
+                throw;
+            }
+            catch (DuplicateRequestException)
             {
                 throw;
             }
@@ -85,5 +96,9 @@ namespace Excel.Service
     public class ProcessException : Exception
     {
         public ProcessException(string message, Exception inner) : base(message, inner) { }
+    }
+    public class DuplicateRequestException : Exception
+    {
+        public DuplicateRequestException(string message) : base(message) { }
     }
 }

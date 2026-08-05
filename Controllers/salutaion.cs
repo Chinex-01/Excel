@@ -7,7 +7,7 @@ namespace Greeting.Controllers
     [ApiController]
 
     [Route("api/Name")]
-    [Authorize]
+    [AllowAnonymous]
     public class NameController : Controller
     {
         [HttpPost]

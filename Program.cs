@@ -61,6 +61,7 @@ builder.Services.AddScoped<SqlConn>();
 builder.Services.AddScoped<Validation>();
 builder.Services.AddScoped<ProcessService>();
 builder.Services.AddScoped<ReferenceNumberGenerate>();
+builder.Services.AddScoped<IConfigService, ConfigService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

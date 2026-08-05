@@ -25,14 +25,40 @@ namespace Excel
             }
         }
 
-        public string DbConn(List<Employee> employees, string referenceNumber, double mean)
+        public bool IsDuplicateRequestToday(Guid requestId)
+        {
+            const string method = nameof(IsDuplicateRequestToday);
+            try
+            {
+                using var connection = new SqlConnection(_connectionString);
+                connection.Open();
+
+                const string query = @"SELECT COUNT(1) FROM UploadRequest
+                                       WHERE RequestId = @RequestId
+                                         AND CAST(RequestDate AS DATE) = CAST(GETDATE() AS DATE)";
+
+                using var cmd = new SqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@RequestId", requestId);
+
+                int count = (int)cmd.ExecuteScalar();
+                _logger.LogInformation("[SqlConn.{Method}] RequestId={RequestId} count today={Count}", method, requestId, count);
+                return count > 0;
+            }
+            catch (SqlException sqlex)
+            {
+                _logger.LogError(sqlex, "[SqlConn.{Method}] Failed checking duplicate RequestId={RequestId}.", method, requestId);
+                throw;
+            }
+        }
+
+        public string DbConn(List<Employee> employees, string referenceNumber, double mean, Guid requestId)
         {
             const string method = nameof(DbConn);
             try
             {
                 _logger.LogInformation(
-                    "[SqlConn.{Method}] Starting save. EmployeeCount={Count}, ReferenceNumber={ReferenceNumber}, Mean={Mean}",
-                    method, employees?.Count ?? 0, referenceNumber, mean);
+                    "[SqlConn.{Method}] Starting save. EmployeeCount={Count}, ReferenceNumber={ReferenceNumber}, Mean={Mean}, RequestId={RequestId}",
+                    method, employees?.Count ?? 0, referenceNumber, mean, requestId);
 
                 using var connection = new SqlConnection(_connectionString);
                 connection.Open();
