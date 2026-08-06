@@ -77,8 +77,7 @@ namespace Excel
                 try
                 {
                     // "DbConn" logic — bulk employee insert
-                    string query1 = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department)
-                                      VALUES (@Employ_id, @Username, @Age, @Grade, @Department)";
+                    string query1 = @"INSERT INTO Excel_sheet (Employ_id, Username, Age, Grade, Department) VALUES (@Employ_id, @Username, @Age, @Grade, @Department)";
 
                     using var cmd1 = new SqlCommand(query1, connection, transaction);
                     cmd1.Parameters.Add("@Employ_id", SqlDbType.VarChar, 5);

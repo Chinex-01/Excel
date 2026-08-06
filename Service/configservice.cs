@@ -25,6 +25,8 @@ namespace Excel.Service
                 configuration.GetConnectionString("EmployeeDb")
                 ?? throw new ArgumentException("Connection string is required.");
         }
+
+        // Generate a random 5-character role ID (non-cryptographic – consider using Guid or DB-generated ID)
         string GenerateRoleId()
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -32,10 +34,12 @@ namespace Excel.Service
             return new string(Enumerable.Repeat(chars, 5)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
         public async Task<LoginResult> LoginAsync(string username, string password)
         {
             try
             {
+                // --- Input validation (unchanged) ---
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     return new LoginResult
@@ -80,31 +84,34 @@ namespace Excel.Service
 
                 string hashedPassword = PasswordHasher.ComputeHash(password);
 
+                // --- Database operations ---
                 using SqlConnection connection = new(_connectionString);
-
                 await connection.OpenAsync();
 
+                // 1. SELECT query to verify credentials
                 string sql = @"SELECT Username FROM USERS WHERE Username=@Username AND Hashed_password=@Hashed_password";
 
                 using SqlCommand command = new(sql, connection);
-
                 command.Parameters.AddWithValue("@Username", username);
                 command.Parameters.AddWithValue("@Hashed_password", hashedPassword);
 
-                using SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                if (!await reader.ReadAsync())
+                // FIX 1: Scope the reader so it is closed/disposed BEFORE any other command on the same connection.
+                string dbUsername;
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    return new LoginResult
+                    if (!await reader.ReadAsync())
                     {
-                        Success = false,
-                        StatusCode = 401,
-                        Message = "Invalid Username or Password"
-                    };
-                }
+                        return new LoginResult
+                        {
+                            Success = false,
+                            StatusCode = 401,
+                            Message = "Invalid Username or Password"
+                        };
+                    }
+                    dbUsername = reader["Username"].ToString()!;
+                } // reader is closed and disposed here – connection is now free for other commands
 
-                string dbUsername = reader["Username"].ToString()!;
-
+                // 2. INSERT a new role (flaw: creates a new row on every login – consider checking existence first)
                 string[] roles = { "Admin", "Guest User", "User" };
                 string assignedRole = roles[new Random().Next(roles.Length)];
                 string roleId = GenerateRoleId();
@@ -114,17 +121,17 @@ namespace Excel.Service
                 {
                     insertCmd.Parameters.AddWithValue("@RoleId", roleId);
                     insertCmd.Parameters.AddWithValue("@RoleName", assignedRole);
-                    insertCmd.ExecuteNonQuery();
+                    insertCmd.ExecuteNonQuery(); // Now safe – reader is already closed
                 }
 
+                // --- Build JWT token (unchanged) ---
                 List<Claim> claims =
                 [
                     new Claim(ClaimTypes.Name, dbUsername),
-                    new Claim(ClaimTypes.Role, assignedRole)  
+                    new Claim(ClaimTypes.Role, assignedRole)
                 ];
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-
                 var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 JwtSecurityToken token = new(
@@ -147,7 +154,6 @@ namespace Excel.Service
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Database Error");
-
                 return new LoginResult
                 {
                     Success = false,
@@ -158,7 +164,6 @@ namespace Excel.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected Error");
-
                 return new LoginResult
                 {
                     Success = false,
