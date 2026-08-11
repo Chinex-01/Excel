@@ -22,12 +22,14 @@ public class UploadExcelController : ControllerBase
     {
         const string method = nameof(Upload_Excel);
 
+        var username = User.Identity?.Name;
+
         _logger.LogInformation(
-            "[UploadExcelController.{Method}] Received upload request. RequestId={RequestId}, FileName={FileName}",
-            method);
+            "[UploadExcelController.{Method}] Received upload request. Username={Username}, FileName={FileName}",
+            method, username, file?.FileName);
         try
         {
-            var message = await _processService.ProcessExcelUpload(file);
+            var message = await _processService.ProcessExcelUpload(file, username);
             return Ok(message);
         }
         catch (DuplicateRequestException ex)
