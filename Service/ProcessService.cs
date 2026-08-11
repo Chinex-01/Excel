@@ -35,7 +35,7 @@ namespace Excel.Service
       
 
                 byte[] fileContent = await File.ReadAllBytesAsync(filePath);
-                var requestId = Person.ForUpload(username, fileContent).RequestId;
+                var requestId = PersonFactory.ForUpload(username, fileContent).RequestId;
 
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
                 if (_sqlConn.IsDuplicateRequestToday(requestId))
