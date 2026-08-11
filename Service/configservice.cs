@@ -26,10 +26,20 @@ namespace Excel.Service
                 ?? throw new ArgumentException("Connection string is required.");
         }
 
+        // Generate a random 5-character role ID (non-cryptographic – consider using Guid or DB-generated ID)
+        string GenerateRoleId()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 5)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
         public async Task<LoginResult> LoginAsync(string username, string password)
         {
             try
             {
+                // --- Input validation (unchanged) ---
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     return new LoginResult
@@ -74,49 +84,83 @@ namespace Excel.Service
 
                 string hashedPassword = PasswordHasher.ComputeHash(password);
 
+                // --- Database operations ---
                 using SqlConnection connection = new(_connectionString);
-
                 await connection.OpenAsync();
 
-                string sql = @"SELECT Username
-                               FROM USERS
-                               WHERE Username=@Username
-                               AND Hashed_password=@Hashed_password";
+                // 1. SELECT query to verify credentials
+                string sql = @"SELECT Username FROM USERS WHERE Username=@Username AND Hashed_password=@Hashed_password";
+               
 
                 using SqlCommand command = new(sql, connection);
-
                 command.Parameters.AddWithValue("@Username", username);
                 command.Parameters.AddWithValue("@Hashed_password", hashedPassword);
 
-                using SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                if (!await reader.ReadAsync())
+                // FIX 1: Scope the reader so it is closed/disposed BEFORE any other command on the same connection.
+                string dbUsername;
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
                 {
-                    return new LoginResult
+                    if (!await reader.ReadAsync())
                     {
-                        Success = false,
-                        StatusCode = 401,
-                        Message = "Invalid Username or Password"
-                    };
+                        return new LoginResult
+                        {
+                            Success = false,
+                            StatusCode = 401,
+                            Message = "Invalid Username or Password"
+                        };
+                    }
+                    dbUsername = reader["Username"].ToString()!;
+                } // reader is closed and disposed here – connection is now free for other commands
+
+                string assignedRole;
+                string roleId;
+
+                string checkSql = @"SELECT RoleId, RoleName FROM Roles WHERE Username = @Username";
+
+                using (SqlCommand checkCmd = new SqlCommand(checkSql, connection))
+                {
+                    checkCmd.Parameters.AddWithValue("@Username", username);
+
+                    using (SqlDataReader roleReader = await checkCmd.ExecuteReaderAsync())
+                    {
+                        if (await roleReader.ReadAsync())
+                        {
+                            // Existing user - keep the existing role
+                            roleId = roleReader["RoleId"].ToString()!;
+                            assignedRole = roleReader["RoleName"].ToString()!;
+                        }
+                        else
+                        {
+                            roleReader.Close();
+
+                            // New user - assign a new role
+                            string[] roles = { "Admin", "Guest User", "User" };
+
+                            assignedRole = roles[new Random().Next(roles.Length)];
+                            roleId = GenerateRoleId();
+
+                            string insertSql = @"INSERT INTO Roles (RoleId, Username, RoleName) VALUES (@RoleId, @Username, @RoleName)";
+
+                            using SqlCommand insertCmd = new SqlCommand(insertSql, connection);
+
+                            insertCmd.Parameters.AddWithValue("@RoleId", roleId);
+                            insertCmd.Parameters.AddWithValue("@Username", username);
+                            insertCmd.Parameters.AddWithValue("@RoleName", assignedRole);
+
+                            await insertCmd.ExecuteNonQueryAsync();
+                        }
+                    }
                 }
 
-                string dbUsername = reader["Username"].ToString()!;
-
-                string[] roles = { "Admin", "Guest User", "User" };
-                string assignedRole = roles[new Random().Next(roles.Length)];
-
+                // --- Build JWT token (unchanged) ---
                 List<Claim> claims =
                 [
                     new Claim(ClaimTypes.Name, dbUsername),
                     new Claim(ClaimTypes.Role, assignedRole)
                 ];
 
-                var key = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-
-                var credentials = new SigningCredentials(
-                    key,
-                    SecurityAlgorithms.HmacSha256);
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+                var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                 JwtSecurityToken token = new(
                     issuer: _configuration["Jwt:Issuer"],
@@ -138,7 +182,6 @@ namespace Excel.Service
             catch (SqlException ex)
             {
                 _logger.LogError(ex, "Database Error");
-
                 return new LoginResult
                 {
                     Success = false,
@@ -149,7 +192,6 @@ namespace Excel.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected Error");
-
                 return new LoginResult
                 {
                     Success = false,
