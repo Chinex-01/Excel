@@ -56,6 +56,9 @@ builder.Services.AddScoped<Validation>();
 builder.Services.AddScoped<ProcessService>();
 builder.Services.AddScoped<ReferenceNumberGenerate>();
 builder.Services.AddScoped<IConfigService, ConfigService>();
+builder.Services.AddScoped<ILogoutService, LogoutService>();
+
+
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ITokenBlacklist, TokenBlacklist>();
 
