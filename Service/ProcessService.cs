@@ -22,27 +22,27 @@ namespace Excel.Service
             _logger = logger;
         }
 
-        public async Task<string> ProcessExcelUpload(IFormFile file)
+        public async Task<string> ProcessExcelUpload(IFormFile file, string username)
         {
             const string method = nameof(ProcessExcelUpload);
             string referenceNumber = null;
-            var requestId = Guid.NewGuid().ToString();
 
             try
             {
+                // Save uploaded file (validates it is a non-empty .xlsx/.xls).
+                var filePath = await _validation.Rain(file);
+
+      
+
+                byte[] fileContent = await File.ReadAllBytesAsync(filePath);
+                var requestId = Person.ForUpload(username, fileContent).RequestId;
 
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
                 if (_sqlConn.IsDuplicateRequestToday(requestId))
                 {
-                    _logger.LogWarning("[ProcessService.{Method}] Duplicate RequestId for today. RequestId={RequestId}", method, requestId);
-                    throw new DuplicateRequestException($"RequestId '{requestId}' has already been submitted today.");
+                    _logger.LogWarning("[ProcessService.{Method}] Duplicate upload for today. RequestId={RequestId}", method, requestId);
+                    throw new DuplicateRequestException("You can't upload the same file twice today.");
                 }
-
-                await _sqlConn.LogRequestAsync(requestId);
-
-
-                // Save uploaded file
-                var filePath = await _validation.Rain(file);
 
                 // Open the Excel file
                 using var workbook = new XLWorkbook(filePath);
@@ -63,7 +63,11 @@ namespace Excel.Service
                 var result = Read.Reader(employees, filePath);
 
                 _sqlConn.DbConn(employees, referenceNumber, mean );
-               
+
+                // Record the request only after a successful save, so a failed
+                // upload does not block the user from legitimately retrying today.
+                await _sqlConn.LogRequestAsync(requestId);
+
 
                 _logger.LogInformation(
                     "[ProcessService.{Method}] Excel upload succeeded. RequestId={RequestId}, FileName={FileName}, ReferenceNumber={ReferenceNumber}",
