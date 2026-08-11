@@ -30,6 +30,7 @@ namespace Excel.Service
 
             try
             {
+
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
                 if (_sqlConn.IsDuplicateRequestToday(requestId))
                 {
@@ -38,6 +39,7 @@ namespace Excel.Service
                 }
 
                 await _sqlConn.LogRequestAsync(requestId);
+
 
                 // Save uploaded file
                 var filePath = await _validation.Rain(file);
@@ -61,6 +63,7 @@ namespace Excel.Service
                 var result = Read.Reader(employees, filePath);
 
                 _sqlConn.DbConn(employees, referenceNumber, mean );
+               
 
                 _logger.LogInformation(
                     "[ProcessService.{Method}] Excel upload succeeded. RequestId={RequestId}, FileName={FileName}, ReferenceNumber={ReferenceNumber}",

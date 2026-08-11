@@ -90,6 +90,7 @@ namespace Excel.Service
 
                 // 1. SELECT query to verify credentials
                 string sql = @"SELECT Username FROM USERS WHERE Username=@Username AND Hashed_password=@Hashed_password";
+               
 
                 using SqlCommand command = new(sql, connection);
                 command.Parameters.AddWithValue("@Username", username);
@@ -111,17 +112,44 @@ namespace Excel.Service
                     dbUsername = reader["Username"].ToString()!;
                 } // reader is closed and disposed here – connection is now free for other commands
 
-                // 2. INSERT a new role (flaw: creates a new row on every login – consider checking existence first)
-                string[] roles = { "Admin", "Guest User", "User" };
-                string assignedRole = roles[new Random().Next(roles.Length)];
-                string roleId = GenerateRoleId();
+                string assignedRole;
+                string roleId;
 
-                string insertSql = @"INSERT INTO Roles (RoleId, RoleName) VALUES (@RoleId, @RoleName)";
-                using (SqlCommand insertCmd = new SqlCommand(insertSql, connection))
+                string checkSql = @"SELECT RoleId, RoleName FROM Roles WHERE Username = @Username";
+
+                using (SqlCommand checkCmd = new SqlCommand(checkSql, connection))
                 {
-                    insertCmd.Parameters.AddWithValue("@RoleId", roleId);
-                    insertCmd.Parameters.AddWithValue("@RoleName", assignedRole);
-                    insertCmd.ExecuteNonQuery(); // Now safe – reader is already closed
+                    checkCmd.Parameters.AddWithValue("@Username", username);
+
+                    using (SqlDataReader roleReader = await checkCmd.ExecuteReaderAsync())
+                    {
+                        if (await roleReader.ReadAsync())
+                        {
+                            // Existing user - keep the existing role
+                            roleId = roleReader["RoleId"].ToString()!;
+                            assignedRole = roleReader["RoleName"].ToString()!;
+                        }
+                        else
+                        {
+                            roleReader.Close();
+
+                            // New user - assign a new role
+                            string[] roles = { "Admin", "Guest User", "User" };
+
+                            assignedRole = roles[new Random().Next(roles.Length)];
+                            roleId = GenerateRoleId();
+
+                            string insertSql = @"INSERT INTO Roles (RoleId, Username, RoleName) VALUES (@RoleId, @Username, @RoleName)";
+
+                            using SqlCommand insertCmd = new SqlCommand(insertSql, connection);
+
+                            insertCmd.Parameters.AddWithValue("@RoleId", roleId);
+                            insertCmd.Parameters.AddWithValue("@Username", username);
+                            insertCmd.Parameters.AddWithValue("@RoleName", assignedRole);
+
+                            await insertCmd.ExecuteNonQueryAsync();
+                        }
+                    }
                 }
 
                 // --- Build JWT token (unchanged) ---

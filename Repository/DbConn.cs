@@ -29,10 +29,10 @@ namespace Excel
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            const string query = @"INSERT INTO AuditLog (RequestId) VALUES (@RequestId);";
+            const string query = @"INSERT INTO AuditLog (RequestId, [Date]) VALUES (@RequestId, GETDATE());";
 
             await using var command = new SqlCommand(query, connection);
-            command.Parameters.AddWithValue("@RequestId", requestId);
+            command.Parameters.Add("@RequestId", SqlDbType.UniqueIdentifier).Value = Guid.Parse(requestId);
 
             await command.ExecuteNonQueryAsync();
         }

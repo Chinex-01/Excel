@@ -30,10 +30,6 @@ public class UploadExcelController : ControllerBase
             var message = await _processService.ProcessExcelUpload(file);
             return Ok(message);
         }
-        catch (InvalidHeaderException ex)
-        {
-            return BadRequest(ex.Message);
-        }
         catch (DuplicateRequestException ex)
         {
             return Conflict(ex.Message);
