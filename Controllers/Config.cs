@@ -16,8 +16,8 @@ namespace ATM_API.Controllers
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(
-            [FromQuery] string username,
-            [FromQuery] string password)
+            string username,
+            string password)
         {
             var result = await _configService.LoginAsync(username, password);
 
