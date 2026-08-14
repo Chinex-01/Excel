@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using Microsoft.Data.SqlClient;
+using System.Text.RegularExpressions;
 
 namespace Excel.Service
 {
@@ -22,26 +23,30 @@ namespace Excel.Service
             _logger = logger;
         }
 
-        public async Task<string> ProcessExcelUpload(IFormFile file, string username)
+        public async Task<string> ProcessExcelUpload(IFormFile file, string username, string requestId)
         {
             const string method = nameof(ProcessExcelUpload);
             string referenceNumber = null;
 
             try
             {
+                // A request id is required for every upload and must be two letters
+                // followed by two numbers, e.g. "AB12".
+                if (string.IsNullOrWhiteSpace(requestId) ||
+                    !Regex.IsMatch(requestId, "^[A-Za-z]{2}[0-9]{2}$"))
+                {
+                    _logger.LogWarning("[ProcessService.{Method}] Invalid request id. RequestId={RequestId}", method, requestId);
+                    throw new InvalidRequestIdException("Request id must be two letters followed by two numbers, e.g. AB12.");
+                }
+
                 // Save uploaded file (validates it is a non-empty .xlsx/.xls).
                 var filePath = await _validation.Rain(file);
-
-      
-
-                byte[] fileContent = await File.ReadAllBytesAsync(filePath);
-                var requestId = PersonFactory.ForUpload(username, fileContent).RequestId;
 
                 _logger.LogInformation("[ProcessService.{Method}] Upload started. RequestId={RequestId}, FileName={FileName}", method, requestId, file?.FileName);
                 if (_sqlConn.IsDuplicateRequestToday(requestId))
                 {
                     _logger.LogWarning("[ProcessService.{Method}] Duplicate upload for today. RequestId={RequestId}", method, requestId);
-                    throw new DuplicateRequestException("You can't upload the same file twice today.");
+                    throw new DuplicateRequestException("This request id has already been used today.");
                 }
 
                 // Open the Excel file
@@ -79,6 +84,10 @@ namespace Excel.Service
             {
                 throw;
             }
+            catch (InvalidRequestIdException)
+            {
+                throw;
+            }
             catch (DuplicateRequestException)
             {
                 throw;
@@ -109,5 +118,9 @@ namespace Excel.Service
     public class DuplicateRequestException : Exception
     {
         public DuplicateRequestException(string message) : base(message) { }
+    }
+    public class InvalidRequestIdException : Exception
+    {
+        public InvalidRequestIdException(string message) : base(message) { }
     }
 }

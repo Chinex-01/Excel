@@ -2,9 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Excel.Service
 {
-    // Revoked tokens are kept in memory only until their own expiry, after which
-    // ValidateLifetime already rejects them. Note: this is per-process, so it does
-    // not survive an app restart or work across multiple instances.
+  
     public class TokenBlacklist : ITokenBlacklist
     {
         private readonly IMemoryCache _cache;

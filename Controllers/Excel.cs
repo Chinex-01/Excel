@@ -23,14 +23,20 @@ public class UploadExcelController : ControllerBase
         const string method = nameof(Upload_Excel);
 
         var username = User.Identity?.Name;
+        // Read the request id from the token (set at login) instead of asking again.
+        var requestId = User.FindFirst("RequestId")?.Value;
 
         _logger.LogInformation(
-            "[UploadExcelController.{Method}] Received upload request. Username={Username}, FileName={FileName}",
-            method, username, file?.FileName);
+            "[UploadExcelController.{Method}] Received upload request. Username={Username}, RequestId={RequestId}, FileName={FileName}",
+            method, username, requestId, file?.FileName);
         try
         {
-            var message = await _processService.ProcessExcelUpload(file, username);
+            var message = await _processService.ProcessExcelUpload(file, username, requestId);
             return Ok(message);
+        }
+        catch (InvalidRequestIdException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (DuplicateRequestException ex)
         {

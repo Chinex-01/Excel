@@ -122,6 +122,7 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Excel API V1");
     c.RoutePrefix = "swagger";
+    c.DefaultModelsExpandDepth(-1); // Hide the "Models" (schemas) section at the bottom of the UI.
 });
 
 app.UseHttpsRedirection();

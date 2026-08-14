@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../ExcelWorkerService/ExcelWorkerService.csproj" Id="02bc93d3-2ac1-4833-9a95-c7ec0ba28621" />
   <Project Path="Excel.csproj" />
 </Solution>

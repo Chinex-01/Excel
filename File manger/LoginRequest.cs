@@ -1,11 +1,10 @@
-using System.Text.Json.Serialization;
-
-namespace Excel.File_manger
+namespace Excel
 {
     public class LoginRequest
     {
         public string Username { get; set; }
-        public string password { get; set; }
+        public string Password { get; set; }
 
+        public string RequestId { get; set; }
     }
 }

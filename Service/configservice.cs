@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Excel.Service
 {
@@ -35,7 +36,7 @@ namespace Excel.Service
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public async Task<LoginResult> LoginAsync(string username, string password)
+        public async Task<LoginResult> LoginAsync(string username, string password, string requestId)
         {
             try
             {
@@ -79,6 +80,19 @@ namespace Excel.Service
                         Success = false,
                         StatusCode = 400,
                         Message = "Password must contain at least 6 characters."
+                    };
+                }
+
+                // The request id is captured here (with the credentials) and carried in the
+                // token, so uploads read it from the token instead of asking again.
+                if (string.IsNullOrWhiteSpace(requestId) ||
+                    !Regex.IsMatch(requestId, "^[A-Za-z]{2}[0-9]{2}$"))
+                {
+                    return new LoginResult
+                    {
+                        Success = false,
+                        StatusCode = 400,
+                        Message = "Request id must be two letters followed by two numbers, e.g. AB12."
                     };
                 }
 
@@ -156,7 +170,8 @@ namespace Excel.Service
                 List<Claim> claims =
                 [
                     new Claim(ClaimTypes.Name, dbUsername),
-                    new Claim(ClaimTypes.Role, assignedRole)
+                    new Claim(ClaimTypes.Role, assignedRole),
+                    new Claim("RequestId", requestId)
                 ];
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

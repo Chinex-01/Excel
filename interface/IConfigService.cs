@@ -2,6 +2,6 @@
 {
     public interface IConfigService
     {
-        Task<LoginResult> LoginAsync(string username, string password);
+        Task<LoginResult> LoginAsync(string username, string password, string requestId);
     }
 }

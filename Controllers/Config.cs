@@ -1,7 +1,7 @@
 ﻿using Excel.Service;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ATM_API.Controllers
+namespace Excel
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -15,11 +15,13 @@ namespace ATM_API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(
-            string username,
-            string password)
+        public async Task<IActionResult> Login(LoginRequest request)
         {
-            var result = await _configService.LoginAsync(username, password);
+            var username = request.Username;
+            var password = request.Password;
+            var requestId = request.RequestId;
+
+            var result = await _configService.LoginAsync(username, password, requestId);
 
             if (!result.Success)
             {

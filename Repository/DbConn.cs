@@ -32,7 +32,7 @@ namespace Excel
             const string query = @"INSERT INTO AuditLog (RequestId, [Date]) VALUES (@RequestId, GETDATE());";
 
             await using var command = new SqlCommand(query, connection);
-            command.Parameters.Add("@RequestId", SqlDbType.UniqueIdentifier).Value = Guid.Parse(requestId);
+            command.Parameters.Add("@RequestId", SqlDbType.NVarChar, 4).Value = requestId;
 
             await command.ExecuteNonQueryAsync();
         }
@@ -47,7 +47,7 @@ namespace Excel
                 const string query = @"SELECT COUNT(1) FROM AuditLog WHERE RequestId = @RequestId AND CAST(Date AS DATE) = CAST(GETDATE() AS DATE)";
 
                 using var cmd = new SqlCommand(query, connection);
-                cmd.Parameters.AddWithValue("@RequestId", requestId);
+                cmd.Parameters.Add("@RequestId", SqlDbType.NVarChar, 4).Value = requestId;
 
                 int count = (int)cmd.ExecuteScalar();
                 _logger.LogInformation("[SqlConn.{Method}] RequestId={RequestId} count today={Count}", method, requestId, count);
