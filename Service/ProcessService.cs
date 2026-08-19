@@ -73,7 +73,6 @@ namespace Excel.Service
                 // upload does not block the user from legitimately retrying today.
                 await _sqlConn.LogRequestAsync(requestId);
 
-
                 _logger.LogInformation(
                     "[ProcessService.{Method}] Excel upload succeeded. RequestId={RequestId}, FileName={FileName}, ReferenceNumber={ReferenceNumber}",
                     method, requestId, file.FileName, referenceNumber);
